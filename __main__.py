@@ -105,7 +105,7 @@ manually to the api_key.txt file.\nThis will be in the path you chose in the las
                 print(f"Creating {directory}")
                 os.mkdir(directory)
             else:
-                print(f"{directory} found. Skipping")
+                print(f"Skipping {directory}. Already exists.")
 
         for file in files:
             if not os.path.exists(file):
@@ -117,7 +117,7 @@ manually to the api_key.txt file.\nThis will be in the path you chose in the las
                     with open(file, "x", encoding="utf-8") as make_file:
                         pass
             else:
-                print(f"{file} found. Skipping")
+                print(f"Skipping {file}. Already exists.")
 
     # Save the path to the Apod Image Directory
     def save_image_dir(self, images_path_file: str, images_dir: str) -> None:

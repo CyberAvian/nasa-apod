@@ -189,7 +189,7 @@ class Apod:
             image_name = os.path.split(url)[1]
             # If the image has already been saved, there is no need to request it again
             if os.path.exists(os.path.join(self.images_dir, image_name)):
-                print(f"{image_name} already exists. Skipping")
+                print(f"Skipping {image_name}. Already exists.")
                 continue
             try:
                 print(f"Requesting {url}")
