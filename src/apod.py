@@ -9,21 +9,20 @@ import requests
 
 
 class Apod:
-    def __init__(self, data_dir: str = None, resource_dir: str = None) -> None:
+    def __init__(self, images_dir: str = None) -> None:
         """
         Create the necessary directories and files to store image data and images.
         resource_dir is a directory called Resources that will contain an images directory, an api key file, and a responses.json file
         """
         
         self.data_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data")
-        if not resource_dir:
-            resource_dir = os.path.join(self.data_dir, "resources")
-        self.resource_dir = resource_dir
-        self.images_dir = os.path.join(self.resource_dir, "images")
+        if not images_dir:
+            images_dir = os.path.join(self.data_dir, "images")
+        self.images_dir = images_dir
         
-        self.resource_dir_file = os.path.join(self.data_dir, "resource_dir_path.txt")
+        self.images_path_file = os.path.join(self.data_dir, "images_path.txt")
         self.api_key_file = os.path.join(self.data_dir, "api_key.txt")
-        self.responses_file = os.path.join(self.resource_dir, "responses.json")
+        self.responses_file = os.path.join(self.data_dir, "responses.json")
 
     # Main Function that runs through the entire process of requesting and saving APOD images
     def main(self, date: str = None, start_date: str = None, end_date: str = None, count: int = None):

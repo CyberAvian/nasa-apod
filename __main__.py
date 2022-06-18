@@ -18,10 +18,10 @@ class Main:
 
     def main(self):
         self.clear_screen()
-        print("Checking for existing resource directory")
+        print("Checking for existing images directory")
         try:
-            resource_dir = self.setup()
-            apod = Apod(resource_dir)
+            images_dir = self.setup()
+            apod = Apod(images_dir)
             input("Press enter to continue...")
         except ValueError as errv:
             print(errv)
@@ -54,33 +54,33 @@ class Main:
 
     def setup(self):
         data_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), "data")
-        resource_dir_file = os.path.join(data_dir, "resource_dir_path.txt")
+        images_path_file = os.path.join(data_dir, "images_path.txt")
 
-        # Once a resource directory has been chosen, it should be saved in ./data/resource_dir_path.txt
-        # If the data directory or resource_dir_path.txt file don't exist, or if the file is empty, a resource directory is not set.
-        if os.path.exists(data_dir) and os.path.exists(resource_dir_file) and os.path.getsize(resource_dir_file) > 0:
-            resource_dir = self.load_resource_dir(resource_dir_file)
-            print(f"Found {resource_dir}")
+        # Once an images directory has been chosen, it should be saved in ./data/images_path.txt
+        # If the data directory or images_path.txt file don't exist, or if the file is empty, an images directory is not set.
+        if os.path.exists(data_dir) and os.path.exists(images_path_file) and os.path.getsize(images_path_file) > 0:
+            images_dir = self.load_images_dir(images_path_file)
+            print(f"Found {images_dir}")
         else:
             self.clear_screen()
-            resource_dir = self.get_resource_dir(data_dir)
+            images_dir = self.get_images_dir(data_dir)
             api_key = self.get_api_key()
             self.clear_screen()
             print("\nSetting up file system")
-            self.create_resources(data_dir, resource_dir, api_key)
-            self.save_resource_dir(resource_dir_file, resource_dir)
+            self.create_dirs(data_dir, images_dir, api_key)
+            self.save_image_dir(images_path_file, images_dir)
             if api_key == "":
-                raise ValueError(f"API Key not set.\nPlease add API Key to api_key.txt located in {resource_dir}")
+                raise ValueError(f"API Key not set.\nPlease add API Key to api_key.txt located in {images_dir}")
 
-        return resource_dir
+        return images_dir
 
-    def get_resource_dir(self, data_dir_path: str) -> str:
-        print("Provide a path to store files used by this program.")
-        print("This path will store images, the api key, and the responses from queries.\n")
-        resource_dir = input("<Path> [./data/]: ")
-        if resource_dir == "":
-            resource_dir = os.path.join(data_dir_path, "resources")
-        return resource_dir
+    def get_images_dir(self, data_dir_path: str) -> str:
+        print("Provide a path to store the fetched images.")
+        print("The path should be the absolute path to the folder the images are to be placed in.")
+        images_dir = input("<Path> [./data/images]: ")
+        if images_dir == "":
+            images_dir = os.path.join(data_dir_path, "imagess")
+        return images_dir
 
     def get_api_key(self) -> str:
         print("\nEnter API Key.\nIf left blank, the program will exit after creating directories so you can add the key \
@@ -88,18 +88,17 @@ manually to the api_key.txt file.\nThis will be in the path you chose in the las
         api_key = input("<Key>: ")
         return api_key
 
-    def create_resources(self, data_dir: str, resource_dir: str, api_key: str) -> None:
+    def create_dirs(self, data_dir: str, images_dir: str, api_key: str) -> None:
         """
         Creates the required directories and files if not already present.
         """
 
-        images_dir = os.path.join(resource_dir, "images")
-        resource_dir_file = os.path.join(data_dir, "resource_dir_path.txt")
+        images_path_file = os.path.join(data_dir, "images_path.txt")
         api_key_file = os.path.join(data_dir, "api_key.txt")
-        responses_file = os.path.join(resource_dir, "responses.json")
+        responses_file = os.path.join(data_dir, "responses.json")
 
-        directories = [data_dir, resource_dir, images_dir]
-        files = [resource_dir_file, api_key_file, responses_file]
+        directories = [data_dir, images_dir, images_dir]
+        files = [images_path_file, api_key_file, responses_file]
 
         for directory in directories:
             if not os.path.exists(directory):
@@ -109,7 +108,6 @@ manually to the api_key.txt file.\nThis will be in the path you chose in the las
                 print(f"{directory} found. Skipping")
 
         for file in files:
-            print(f"Checking if {file} exists")
             if not os.path.exists(file):
                 print(f"Creating {file}")
                 if file == api_key_file and api_key != "":
@@ -121,24 +119,24 @@ manually to the api_key.txt file.\nThis will be in the path you chose in the las
             else:
                 print(f"{file} found. Skipping")
 
-    # Save the path to the Apod Resource Directory
-    def save_resource_dir(self, resource_dir_file: str, resource_dir: str) -> None:
+    # Save the path to the Apod Image Directory
+    def save_image_dir(self, images_path_file: str, images_dir: str) -> None:
         """
-        Saves the path to the resource directory to data/resource_dir_path.txt
+        Saves the path to the image directory to the data/images_path.txt file
         """
         
-        with open(resource_dir_file, "w", encoding="utf-8") as resource_file:
-            resource_file.write(resource_dir)
+        with open(images_path_file, "w", encoding="utf-8") as images_file:
+            images_file.write(images_dir)
 
-    # Load the path to the Apod Resource Directory
-    def load_resource_dir(self, resource_dir_file: str) -> None:
+    # Load the path to the Apod Image Directory
+    def load_images_dir(self, images_path_file: str) -> None:
         """
-        Loads a saved resource directory from data/resource_dir_path.txt
+        Loads a saved image directory from data/images_path.txt
         """
         
-        with open(resource_dir_file, "r", encoding="utf-8") as resource_file:
-            resource_dir_path = resource_file.read()
-        return resource_dir_path
+        with open(images_path_file, "r", encoding="utf-8") as images_file:
+            images_path = images_file.read()
+        return images_path
 
     def get_option(self) -> str:
         self.clear_screen()
