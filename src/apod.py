@@ -33,24 +33,23 @@ class Apod:
         # Handle Response
         try:
             response = self.get_response(date, start_date, end_date, count)
+            formatted_response = self.format_response(response)
+            self.save_response(formatted_response)
+
+            # Handle Images
+            image_urls = self.get_image_urls(formatted_response)
+            images = self.get_images(image_urls)
+            if images:
+                self.save_images(images)
+            else:
+                print("Nothing to save")
+
+            print("Finished running")
+            input("Press enter to quit")
         except ValueError as errv:
             print(errv)
             print("Exiting")
             return 0
-        formatted_response = self.format_response(response)
-        self.save_response(formatted_response)
-
-        # Handle Images
-        image_urls = self.get_image_urls(formatted_response)
-        images = self.get_images(image_urls)
-        if images:
-            self.save_images(images)
-        else:
-            print("Nothing to save")
-
-        print("Finished running")
-
-        input("Press enter to quit")
 
     # Get Web Request for Specified Dates
     def get_response(self, date: str = None, start_date: str = None, end_date: str = None, count: int = None) -> requests.models.Response:
@@ -192,6 +191,10 @@ class Apod:
                 print(f"Skipping {image_name}. Already exists.")
                 continue
             try:
+                # Images should be jpgs. Occassionally, the photo of the day is a link to an outside site or game
+                # It should be safe to ignore anything that isn't a jpg
+                if image_name[-3:] != "jpg":
+                    raise ValueError(f"Error: {image_name} is not an image.")
                 print(f"Requesting {url}")
                 image_data = requests.get(url)
                 image_data.raise_for_status()
@@ -200,6 +203,8 @@ class Apod:
                 raise ValueError(f"HTTP Error: {errh}.\nQuitting")
             except requests.exceptions.RequestException as err:
                 raise ValueError(f"Ran into a problem fetching {url}.\nError: {err}.\nQuitting")
+            except ValueError as errv:
+                raise ValueError(errv)
 
         return images
 
