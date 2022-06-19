@@ -12,7 +12,7 @@ class Main:
         self.err = ""
         self.options: dict = {
             "From a Single Day": self.get_single_image, 
-            "From a Range of Days": self.get_range_images, 
+            "From a Range of Days": self.get_range_images,
             "From Random Days": self.get_random_images
         }
 
