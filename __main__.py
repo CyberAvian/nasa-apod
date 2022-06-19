@@ -17,6 +17,10 @@ class Main:
         }
 
     def main(self):
+        """
+        Entry point into script.
+        """
+        
         self.clear_screen()
         print("Checking for existing images directory")
         try:
@@ -43,16 +47,27 @@ class Main:
                 self.err = errv
 
     def set_err(self, message: str = ""):
+        """"
+        Sets the error message. If message is not specified, it will set error to an empty string.
+        """
+        
         self.err = message
 
     def clear_screen(self):
-        # Run console clear command based on detected OS
+        """
+        Run clear console command based on detected OS
+        """
+        
         if os.name == 'nt':
             os.system('cls')
         else:
             os.system('clear')
 
     def setup(self):
+        """
+        Checks if the images directory has already been set up. If it hasn't, create it and then run the create for every other directory and file needed.
+        """
+        
         data_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), "data")
         images_path_file = os.path.join(data_dir, "images_path.txt")
 
@@ -75,14 +90,25 @@ class Main:
         return images_dir
 
     def get_images_dir(self, data_dir_path: str) -> str:
+        """
+        Get the path of the desired image directory from the user
+        If no path is specified, will set it to the data directory
+        """
+        
         print("Provide a path to store the fetched images.")
         print("The path should be the absolute path to the folder the images are to be placed in.")
         images_dir = input("<Path> [./data/images]: ")
         if images_dir == "":
-            images_dir = os.path.join(data_dir_path, "imagess")
+            images_dir = os.path.join(data_dir_path, "images")
         return images_dir
 
     def get_api_key(self) -> str:
+        """
+        Prompt the user for their api key to add to api_key.txt
+        If the user prefers to do it manually, the key can be left blank
+        User must fill in key before running program
+        """
+        
         print("\nEnter API Key.\nIf left blank, the program will exit after creating directories so you can add the key \
 manually to the api_key.txt file.\nThis will be in the path you chose in the last step.")
         api_key = input("<Key>: ")
@@ -139,6 +165,10 @@ manually to the api_key.txt file.\nThis will be in the path you chose in the las
         return images_path
 
     def get_option(self) -> str:
+        """
+        Prompt for how images should be pulled.
+        """
+        
         self.clear_screen()
         print("Nasa APOD Image Saver\n")
         option_names = list(self.options.keys())
@@ -157,6 +187,10 @@ manually to the api_key.txt file.\nThis will be in the path you chose in the las
         return selected_option
 
     def get_single_image(self, apod_handler: Apod, image_date: str = None) -> None:
+        """
+        Pull a single image from a specified date
+        """
+        
         if not image_date:
             self.clear_screen()
             print("Pull Image From a Single Day\n")
@@ -176,6 +210,12 @@ manually to the api_key.txt file.\nThis will be in the path you chose in the las
             apod_handler.main()
 
     def get_range_images(self, apod_handler: Apod, image_start_date: str = None, image_end_date: str = None) -> None:
+        """
+        Pull images from a specified date range
+        Date range is defined by a start date and an end date
+        If no end date is provided, it will be set to today
+        """
+        
         if not image_start_date or not image_end_date:
             self.clear_screen()
             print("Pull Images From a Range of Days\n")
@@ -198,6 +238,10 @@ manually to the api_key.txt file.\nThis will be in the path you chose in the las
             raise ValueError("Date must be in the format of YYYY-MM-DD")
 
     def get_random_images(self, apod_handler: Apod, image_count: int = None) -> None:
+        """
+        Pull a specified random number of images from random days
+        """
+        
         if not image_count:
             self.clear_screen()
             print("Pull Images From Random Days\n")
