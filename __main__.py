@@ -91,6 +91,11 @@ class Main:
         random_days.add_argument("count", help="number of images to pull")
         random_days.set_defaults(func=self.get_random_images)
 
+        from_last_day = subparsers.add_parser("from-last-day",
+                                              aliases = ['fld'],
+                                              help="pulls images between today and the last requested image date")
+        from_last_day.set_defaults(func=self.get_from_last_image)
+
         args = parser.parse_args()
         return args
 
@@ -294,7 +299,7 @@ manually to the api_key.txt file.\nThis will be in the path you chose in the las
         self.clear_screen()
         apod_handler.main(count=image_count)
 
-    def get_from_last_image(self, apod_handler: Apod):
+    def get_from_last_image(self, apod_handler: Apod, cmd_args: argparse.Namespace = None):
         """
         Fetches images starting from the date of the last image fetched and ending today.
         Checks responses.json to see what the most recent image date is.
@@ -303,8 +308,11 @@ manually to the api_key.txt file.\nThis will be in the path you chose in the las
         with open(apod_handler.responses_file, "r") as r_file:
             images = json.load(r_file)
         last_image_date = images[-1]["date"]
-        self.clear_screen()
-        apod_handler.main(start_date=last_image_date)
+        if last_image_date != datetime.strftime(datetime.today(), "%Y-%m-%d"):
+            self.clear_screen()
+            apod_handler.main(start_date=last_image_date)
+        else:
+            print("Nothing to pull. All images already pulled.")
 
 if __name__=='__main__':
     program = Main()
