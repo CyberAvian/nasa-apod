@@ -190,11 +190,10 @@ class Apod:
             if os.path.exists(os.path.join(self.images_dir, image_name)):
                 print(f"Skipping {image_name}. Already exists.")
                 continue
+            if image_name[-3:] not in ["jpg", "gif", "png"]:
+                print(f"Skipping {image_name}. Not an image.")
+                continue
             try:
-                # Images should be jpgs. Occassionally, the photo of the day is a link to an outside site or game
-                # It should be safe to ignore anything that isn't a jpg
-                if image_name[-3:] != "jpg":
-                    raise ValueError(f"Error: {image_name} is not an image.")
                 print(f"Requesting {url}")
                 image_data = requests.get(url)
                 image_data.raise_for_status()

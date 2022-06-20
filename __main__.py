@@ -1,3 +1,4 @@
+import argparse
 import os
 from datetime import datetime
 
@@ -20,31 +21,34 @@ class Main:
         """
         Entry point into script.
         """
-        
-        self.clear_screen()
+
         print("Checking for existing images directory")
         try:
             images_dir = self.setup()
             apod = Apod(images_dir)
-            input("Press enter to continue...")
         except ValueError as errv:
             print(errv)
             return 0
 
-        while True:
-            option = self.get_option()
-            if option:
-                self.set_err()
-                break
-            self.set_err("Invalid Option Number")
-        
-        # Lookup the selected option name in the options dictionary and call the associated method value
-        while True:
-            try:
-                self.options[option](apod)
-                break
-            except ValueError as errv:
-                self.err = errv
+        args = self.get_args()
+        try:
+            args.func(apod, cmd_args=args)
+        except AttributeError as ae:
+            print(ae)
+            while True:
+                option = self.get_option()
+                if option:
+                    self.set_err()
+                    break
+                self.set_err("Invalid Option Number")
+            
+            # Lookup the selected option name in the options dictionary and call the associated method value
+            while True:
+                try:
+                    self.options[option](apod)
+                    break
+                except ValueError as errv:
+                    self.err = errv
 
     def set_err(self, message: str = ""):
         """"
@@ -62,6 +66,32 @@ class Main:
             os.system('cls')
         else:
             os.system('clear')
+
+    def get_args(self) -> argparse.Namespace:
+        parser = argparse.ArgumentParser()
+        subparsers = parser.add_subparsers(help="Method of pulling images")
+        
+        single_day = subparsers.add_parser("single-day",
+                                           aliases = ['sd'],
+                                           help="pull images from a single day")
+        single_day.add_argument("-d", "--date", default="", help="date to pull image from. YYYY-MM-DD format. defaults to today.")
+        single_day.set_defaults(func=self.get_single_image)
+        
+        range_days = subparsers.add_parser("range-days",
+                                           aliases = ['rgd'],
+                                           help="pull images from a range of days")
+        range_days.add_argument("start_date", help="first date in range. YYYY-MM-DD format")
+        range_days.add_argument("-e", "--end-date", default="", help="last date in range. YYYY-MM-DD format. defaults to today.")
+        range_days.set_defaults(func=self.get_range_images)
+
+        random_days = subparsers.add_parser("random-days",
+                                            aliases = ['rnd'],
+                                            help="pulls provided number of random images")
+        random_days.add_argument("count", help="number of images to pull")
+        random_days.set_defaults(func=self.get_random_images)
+
+        args = parser.parse_args()
+        return args
 
     def setup(self):
         """
@@ -168,9 +198,8 @@ manually to the api_key.txt file.\nThis will be in the path you chose in the las
         """
         Prompt for how images should be pulled.
         """
-        
-        self.clear_screen()
-        print("Nasa APOD Image Saver\n")
+
+        print("\nNasa APOD Image Saver\n")
         option_names = list(self.options.keys())
         print("How should images be pulled?\n")
         for i, option in enumerate(option_names, start=1):
@@ -186,12 +215,17 @@ manually to the api_key.txt file.\nThis will be in the path you chose in the las
         selected_option = option_names[int(option_num) - 1]
         return selected_option
 
-    def get_single_image(self, apod_handler: Apod, image_date: str = None) -> None:
+    def get_single_image(self, apod_handler: Apod, image_date: str = None, cmd_args: argparse.Namespace = None) -> None:
         """
         Pull a single image from a specified date
+
+        cmd_args are command line arguments. They get checked first
+        image_date is the date to pull images from. Can't run with cmd_args
         """
         
-        if not image_date:
+        if cmd_args:
+            image_date = cmd_args.date
+        elif not image_date:
             self.clear_screen()
             print("Pull Image From a Single Day\n")
             print("Enter the date to pull the image from. Use the format YYYY-MM-DD. Include dashes.")
@@ -209,22 +243,27 @@ manually to the api_key.txt file.\nThis will be in the path you chose in the las
         else:
             apod_handler.main()
 
-    def get_range_images(self, apod_handler: Apod, image_start_date: str = None, image_end_date: str = None) -> None:
+    def get_range_images(self, apod_handler: Apod, image_start_date: str = None, image_end_date: str = None, cmd_args: argparse.Namespace = None) -> None:
         """
         Pull images from a specified date range
         Date range is defined by a start date and an end date
         If no end date is provided, it will be set to today
         """
         
-        if not image_start_date or not image_end_date:
+        if cmd_args:
+            print(cmd_args)
+            image_start_date = cmd_args.start_date
+            image_end_date = cmd_args.end_date
+        elif not image_start_date or not image_end_date:
             self.clear_screen()
             print("Pull Images From a Range of Days\n")
             print("Enter the start and end dates for the range to pull from. Use the format YYYY-MM-DD. Include dashes.")
             print(self.err)
-        if not image_start_date:
-            image_start_date = input("<Start Date>: ")
-        if not image_end_date:
-            image_end_date = input("<End Date> [Today]: ")
+        
+            if not image_start_date:
+                image_start_date = input("<Start Date>: ")
+            if not image_end_date:
+                image_end_date = input("<End Date> [Today]: ")
 
         try:
             datetime.strptime(image_start_date, "%Y-%m-%d")
@@ -237,12 +276,14 @@ manually to the api_key.txt file.\nThis will be in the path you chose in the las
         except ValueError:
             raise ValueError("Date must be in the format of YYYY-MM-DD")
 
-    def get_random_images(self, apod_handler: Apod, image_count: int = None) -> None:
+    def get_random_images(self, apod_handler: Apod, image_count: int = None, cmd_args: argparse.Namespace = None) -> None:
         """
         Pull a specified random number of images from random days
         """
         
-        if not image_count:
+        if cmd_args:
+            image_count = cmd_args.count
+        elif not image_count:
             self.clear_screen()
             print("Pull Images From Random Days\n")
             print("Enter the number of images to pull. Must be an integer.")
