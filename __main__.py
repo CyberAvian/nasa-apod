@@ -1,4 +1,5 @@
 import argparse
+import json
 import os
 from datetime import datetime
 
@@ -14,7 +15,8 @@ class Main:
         self.options: dict = {
             "From a Single Day": self.get_single_image, 
             "From a Range of Days": self.get_range_images,
-            "From Random Days": self.get_random_images
+            "From Random Days": self.get_random_images,
+            "Since Last Requested Day": self.get_from_last_image
         }
 
     def main(self):
@@ -33,8 +35,7 @@ class Main:
         args = self.get_args()
         try:
             args.func(apod, cmd_args=args)
-        except AttributeError as ae:
-            print(ae)
+        except AttributeError:
             while True:
                 option = self.get_option()
                 if option:
@@ -292,6 +293,18 @@ manually to the api_key.txt file.\nThis will be in the path you chose in the las
                 raise ValueError("Input must be an integer.")
         self.clear_screen()
         apod_handler.main(count=image_count)
+
+    def get_from_last_image(self, apod_handler: Apod):
+        """
+        Fetches images starting from the date of the last image fetched and ending today.
+        Checks responses.json to see what the most recent image date is.
+        """
+
+        with open(apod_handler.responses_file, "r") as r_file:
+            images = json.load(r_file)
+        last_image_date = images[-1]["date"]
+        self.clear_screen()
+        apod_handler.main(start_date=last_image_date)
 
 if __name__=='__main__':
     program = Main()
