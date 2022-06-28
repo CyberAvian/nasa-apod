@@ -1,7 +1,7 @@
 import argparse
 import json
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
 
 try:
     from .src.apod import Apod
@@ -35,7 +35,10 @@ class Main:
         args = self.get_args()
         try:
             args.func(apod, cmd_args=args)
-        except AttributeError:
+        except ValueError as errv: # There was an error running the selected function
+            print(errv)
+            print("Quitting")
+        except AttributeError: # There were no arguments passed to the program
             while True:
                 option = self.get_option()
                 if option:
@@ -305,14 +308,18 @@ manually to the api_key.txt file.\nThis will be in the path you chose in the las
         Checks responses.json to see what the most recent image date is.
         """
 
-        with open(apod_handler.responses_file, "r") as r_file:
-            images = json.load(r_file)
-        last_image_date = images[-1]["date"]
-        if last_image_date != datetime.strftime(datetime.today(), "%Y-%m-%d"):
-            self.clear_screen()
-            apod_handler.main(start_date=last_image_date)
-        else:
-            print("Nothing to pull. All images already pulled.")
+        try:
+            with open(apod_handler.responses_file, "r") as r_file:
+                images = json.load(r_file)
+            last_image_date = images[-1]["date"]
+            if last_image_date != datetime.strftime(datetime.today(), "%Y-%m-%d"):
+                start_date = datetime.strftime(datetime.strptime(last_image_date, "%Y-%m-%d") + timedelta(days=1), "%Y-%m-%d")
+                self.clear_screen()
+                apod_handler.main(start_date=start_date)
+            else:
+                print("Nothing to pull. All images already pulled.")
+        except json.JSONDecodeError:
+            raise ValueError("No previous requests.\nRun another option.")
 
 if __name__=='__main__':
     program = Main()

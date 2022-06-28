@@ -34,7 +34,6 @@ class Apod:
         try:
             response = self.get_response(date, start_date, end_date, count)
             formatted_response = self.format_response(response)
-            self.save_response(formatted_response)
 
             # Handle Images
             image_urls = self.get_image_urls(formatted_response)
@@ -43,7 +42,7 @@ class Apod:
                 self.save_images(images)
             else:
                 print("Nothing to save")
-
+            self.save_response(formatted_response) # We wait to save the returned json until everything has successfully ran
             print("Finished running")
             input("Press enter to quit")
         except ValueError as errv:
