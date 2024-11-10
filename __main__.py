@@ -309,7 +309,7 @@ manually to the api_key.txt file.\nThis will be in the path you chose in the las
         """
 
         try:
-            with open(apod_handler.responses_file, "r") as r_file:
+            with open(apod_handler.responses_file, "r", encoding="utf-8") as r_file:
                 images = json.load(r_file)
             last_image_date = images[-1]["date"]
             if last_image_date != datetime.strftime(datetime.today(), "%Y-%m-%d"):

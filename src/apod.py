@@ -14,12 +14,13 @@ class Apod:
         Create the necessary directories and files to store image data and images.
         resource_dir is a directory called Resources that will contain an images directory, an api key file, and a responses.json file
         """
-        
-        self.data_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data")
+
+        self.data_dir = os.path.join(os.path.dirname(
+            os.path.dirname(os.path.abspath(__file__))), "data")
         if not images_dir:
             images_dir = os.path.join(self.data_dir, "images")
         self.images_dir = images_dir
-        
+
         self.images_path_file = os.path.join(self.data_dir, "images_path.txt")
         self.api_key_file = os.path.join(self.data_dir, "api_key.txt")
         self.responses_file = os.path.join(self.data_dir, "responses.json")
@@ -42,7 +43,8 @@ class Apod:
                 self.save_images(images)
             else:
                 print("Nothing to save")
-            self.save_response(formatted_response) # We wait to save the returned json until everything has successfully ran
+            # We wait to save the returned json until everything has successfully ran
+            self.save_response(formatted_response)
             print("Finished running")
             input("Press enter to quit")
         except ValueError as errv:
@@ -65,7 +67,7 @@ class Apod:
                             Can only be used with start_date.
             count       -   Specifies the number of randomly chosen images to retrieve.
                             Must be used alone.
-        
+
         If no parameters are set, the API will default to pulling the APOD image for today.
 
         If more than one parameter was set, only the first in the order of [date, start_date, count] will be called.
@@ -83,7 +85,8 @@ class Apod:
                 api_key = api_file.readlines()[0].rstrip()
             url = f'https://api.nasa.gov/planetary/apod?api_key={api_key}'
         except IndexError:
-            raise ValueError(f"No API Key set.\nPlease set API Key in {self.api_key_file}")
+            raise ValueError(
+                f"No API Key set.\nPlease set API Key in {self.api_key_file}")
 
         if date:
             url += f'&date={date}'
@@ -104,7 +107,8 @@ class Apod:
         except requests.exceptions.HTTPError as errh:
             raise ValueError(f"HTTP Error: {errh}.\nQuitting")
         except requests.exceptions.RequestException as err:
-            raise ValueError(f"Ran into a problem fetching {url}.\nError: {err}.\nQuitting")
+            raise ValueError(
+                f"Ran into a problem fetching {url}.\nError: {err}.\nQuitting")
 
     # Turn Response Into List for Parsing
     def format_response(self, response: requests.models.Response) -> list[dict]:
@@ -131,23 +135,25 @@ class Apod:
 
         past_responses = list()
         if os.path.getsize(self.responses_file) > 0:
-            with open(self.responses_file, "r", encoding="utf-8") as response_file:        
+            with open(self.responses_file, "r", encoding="utf-8") as response_file:
                 past_responses.extend(json.load(response_file))
 
         past_responses.extend(formatted_response)
         # Each image response has a key that specifies which date the image was featured on APOD
         # This is a convenient piece of data to sort the responses by
-        past_responses.sort(key = lambda response: response["date"])
+        past_responses.sort(key=lambda response: response["date"])
 
         # Remove any duplicate entries from the list
         filtered_past_responses = []
-        [filtered_past_responses.append(response) for response in past_responses if response not in filtered_past_responses]
+        [filtered_past_responses.append(
+            response) for response in past_responses if response not in filtered_past_responses]
 
         print(f"Saving retrieved response to {self.responses_file}")
         # The entire response file was read in and stored in the self.past_responses variable, then filtered into filtered_past_responses
         # Writing to the file instead of appending to it will ensure no duplicates are added
         with open(self.responses_file, "w", encoding="utf-8") as response_file:
-            json.dump(filtered_past_responses, response_file, ensure_ascii=False, indent=4)
+            json.dump(filtered_past_responses, response_file,
+                      ensure_ascii=False, indent=4)
         print("Save complete")
 
     # Get Image URLS from Response
@@ -165,11 +171,17 @@ class Apod:
             # Every image json block should have the hdurl key, but better safe than sorry
             if "hdurl" in image_json:
                 image_url = image_json["hdurl"]
-            else:
+            elif "url" in image_json:
                 image_url = image_json["url"]
+            else:
+                # PATCH: October 23 2024 had no url and this code did not account for it.
+                print("No image url for {}. Skipping".format(
+                    image_json["date"]
+                ))
+                continue
             print(f"Found {image_url}")
             image_urls.append(image_url)
-        
+
         return image_urls
 
     # Request Image URL
@@ -180,7 +192,7 @@ class Apod:
         The assumption is that the image name will be the .jpg name in the url.
         This is to reduce the total number of requests sent to the NASA APOD API.
         """
-        
+
         print("Requesting images")
         images = list()
         for url in image_urls:
@@ -200,7 +212,8 @@ class Apod:
             except requests.exceptions.HTTPError as errh:
                 raise ValueError(f"HTTP Error: {errh}.\nQuitting")
             except requests.exceptions.RequestException as err:
-                raise ValueError(f"Ran into a problem fetching {url}.\nError: {err}.\nQuitting")
+                raise ValueError(
+                    f"Ran into a problem fetching {url}.\nError: {err}.\nQuitting")
             except ValueError as errv:
                 raise ValueError(errv)
 
@@ -212,7 +225,7 @@ class Apod:
         Save images to the defined image directory. By default, this is apod/resources/images.
         Images should be a list of tuples in the form [(image_name, image_data)]
         """
-        
+
         print(f"Saving images")
         for image in images:
             image_name = image[0]
